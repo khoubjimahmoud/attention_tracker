@@ -1,0 +1,172 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attention Tracker</title>
+    <link rel="stylesheet" href="{% static 'tracker/bulma.min.css' %}">
+    <style>
+        /* Custom styling for the minimalist design */
+        body {
+            background-color: #2a2a2a;
+            color: #f5f5f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .container {
+            padding: 20px;
+            max-width: 900px;
+            margin: auto;
+        }
+
+        .header-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #fff;
+        }
+
+        .user-card {
+            background-color: #333;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #444;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .user-card img {
+            border-radius: 50%;
+            max-width: 80px;
+            margin-right: 20px;
+        }
+
+        .user-info {
+            flex-grow: 1;
+            color: #ddd;
+        }
+
+        .user-info p {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        .attention-bar {
+            background-color: #444;
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .attention-bar .filled {
+            background-color: #48c774;
+            height: 100%;
+        }
+
+        .details-button {
+            background-color: #48c774;
+            border: none;
+            padding: 10px 15px;
+            color: #fff;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #user-details {
+            display: none;
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        #user-details h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        #user-details img {
+            max-width: 150px;
+            border-radius: 50%;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="header-title">Attention Tracker</h1>
+
+        <!-- User Cards Loop -->
+        {% for user, percentage in attention_percentages.items %}
+        <div class="user-card">
+            <img src="{% static 'images/' %}{{ user|slugify }}.jpg" alt="{{ user }}">
+            <div class="user-info">
+                <p>{{ user }}</p>
+                <p>{{ percentage|floatformat:2 }}% Attention</p>
+                <div class="attention-bar">
+                    <div class="filled" style="width: {{ percentage }}%;"></div>
+                </div>
+            </div>
+            <button class="details-button" onclick="showDetails('{{ user }}')">Details</button>
+        </div>
+        {% endfor %}
+
+        <!-- User Details Section -->
+        <div id="user-details">
+            <h2 id="user-title"></h2>
+            <img id="user-image" src="" alt="User Image">
+            <canvas id="user-chart" width="400" height="200"></canvas>
+        </div>
+    </div>
+
+    <script src="{% static 'tracker/chart.min.js' %}"></script>
+    <script>
+        function showDetails(user) {
+            // Update user details display
+            document.getElementById('user-title').innerText = user;
+            document.getElementById('user-image').src = '{% static "images/" %}' + user.replace(' ', '_') + '.jpg';
+            document.getElementById('user-details').style.display = 'block';
+
+            // Fetch attention data and display chart
+            fetch('{% url "user_attention_data" %}?user=' + encodeURIComponent(user))
+                .then(response => response.json())
+                .then(data => {
+                    const ctx = document.getElementById('user-chart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.timestamps,
+                            datasets: [{
+                                label: 'Attention',
+                                data: data.attention,
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                fill: false
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                x: {
+                                    type: 'time',
+                                    time: {
+                                        unit: 'minute'
+                                    }
+                                },
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                });
+        }
+    </script>
+</body>
+
+</html>

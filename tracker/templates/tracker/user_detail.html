@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Detail</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<section class="section">
+    <div class="container">
+        <h1 class="title">{{ user.user_id }}</h1>
+        <figure class="image is-128x128">
+            <img src="{{ user.photo.url }}" alt="User Photo">
+        </figure>
+        <canvas id="attentionChart"></canvas>
+        <script>
+            var ctx = document.getElementById('attentionChart').getContext('2d');
+            var attentionData = {{ user.attention_data|safe }};
+            var labels = Array.from(Array(attentionData.length).keys());
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Attention Over Time',
+                        data: attentionData,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+            });
+        </script>
+    </div>
+</section>
+</body>
+</html>
